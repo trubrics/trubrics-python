@@ -79,7 +79,7 @@ client = Trubrics(
 ```
 
 - flush_interval: Time in seconds between automatic flushes (default: 10)
-- flush_at: Number of events that trigger a flush (default: 20)
+- flush_batch_size: Number of events that trigger a flush (default: 20)
 
 ## Development
 

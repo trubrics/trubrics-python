@@ -8,4 +8,4 @@ if not any(isinstance(h, logging.StreamHandler) for h in trubrics_logger.handler
     )
     handler.setFormatter(formatter)
     trubrics_logger.addHandler(handler)
-    trubrics_logger.setLevel(logging.ERROR)
+    trubrics_logger.setLevel(logging.INFO)
