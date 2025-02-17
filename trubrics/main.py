@@ -104,7 +104,7 @@ class Trubrics:
         }
         with self._lock:
             self.queue.append(event_dict)
-            self.logger.info(
+            self.logger.debug(
                 f"Event `{event}` by user `{user_id}` has been added to queue."
             )
 
@@ -158,7 +158,7 @@ class Trubrics:
         with self._lock:
             queue_len = len(self.queue)
             if queue_len and not self.is_flushing:
-                self.logger.info(f"Flushing {queue_len} events.")
+                self.logger.debug(f"Flushing {queue_len} events.")
 
                 self.is_flushing = True
                 events = self.queue[:]
@@ -177,7 +177,7 @@ class Trubrics:
                     self._post(batch)
 
             self.last_flush_time = datetime.now(timezone.utc)
-            self.logger.info(f"Flush of {len(events)} events completed.")
+            self.logger.debug(f"Flush of {len(events)} events completed.")
 
         with self._lock:
             self.is_flushing = False
@@ -187,7 +187,7 @@ class Trubrics:
         self._stop_event.set()
         self._thread.join()
         self.flush()
-        self.logger.info("Background thread stopped and final flush completed.")
+        self.logger.debug("Background thread stopped and final flush completed.")
 
     def _post(self, events: list[dict]):
         with requests.Session() as session:
