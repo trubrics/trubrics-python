@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Change logging level to debug for flushing events and adding event to queue
 
+### Added
+- LLM events are now routed to the new publis_llm_events endpoint
+
 ## [1.8.2] - 2025-02-10
 ### Fixed
 - Added missing flushing limit values, and setup automated flush if limit is reached
