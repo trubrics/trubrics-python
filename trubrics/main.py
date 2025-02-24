@@ -229,7 +229,7 @@ class Trubrics:
         with requests.Session() as session:
             try:
                 response = session.post(
-                    f"{self.host}/{endpoint}",
+                    f"{self.host}/{endpoint.value}",
                     headers={
                         "Content-Type": "application/json",
                         "x-api-key": self.api_key,
