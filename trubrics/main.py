@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import requests
 
@@ -13,6 +13,7 @@ from trubrics.config import (
     MAX_FLUSH_BATCH_SIZE,
     MIN_FLUSH_INTERVAL,
 )
+from trubrics.enums import IngestionEndpoints, EventTypes 
 from trubrics.logger import trubrics_logger
 
 
@@ -101,6 +102,7 @@ class Trubrics:
                 if timestamp
                 else datetime.now(timezone.utc).isoformat()
             ),
+            "event_type": EventTypes.event,
         }
         with self._lock:
             self.queue.append(event_dict)
@@ -129,28 +131,27 @@ class Trubrics:
             timestamp (datetime | None): The timestamp of the generation event. If None, the current time in UTC is used.
             latency (float | None): The latency in seconds between the prompt and the generation. Defaults to 1.
         """
-        generation_timestamp = timestamp or datetime.now(timezone.utc)
-        prompt_timestamp = generation_timestamp - timedelta(seconds=latency or 1)
 
-        self.track(
-            event="Prompt",
-            user_id=user_id,
-            properties={"$text": prompt, **(properties or {})},
-            timestamp=prompt_timestamp,
-        )
+        llm_event_dict = {
+            "user_id": user_id,
+            "prompt": prompt,
+            "generation": generation,
+            "assistant_id": assistant_id,
+            "properties": properties,
+            "timestamp": (
+                timestamp.isoformat()
+                if timestamp
+                else datetime.now(timezone.utc).isoformat()
+            ),
+            "latency": latency,
+            "event_type": EventTypes.llm_event,
+        }
 
-        self.track(
-            event="Generation",
-            user_id=user_id,
-            properties={
-                "$text": generation,
-                "$assistant_id": assistant_id,
-                "$prompt": prompt,
-                "latency(s)": latency,
-                **(properties or {}),
-            },
-            timestamp=generation_timestamp,
-        )
+        with self._lock:
+            self.queue.append(llm_event_dict)
+            self.logger.debug(
+                f"LLM event by user `{user_id}` has been added to queue."
+            )
 
     def flush(self):
         """Flush the event queue."""
@@ -167,14 +168,7 @@ class Trubrics:
         if events:
             for batch_id in range(0, len(events), self.flush_batch_size):
                 batch = events[batch_id : batch_id + self.flush_batch_size]
-                success = self._post(batch)
-
-                if not success:
-                    self.logger.warning(
-                        f"Retrying flush of batch {batch_id} of {len(batch)} events."
-                    )
-                    time.sleep(5)
-                    self._post(batch)
+                self._process_batch(batch, batch_id)
 
             self.last_flush_time = datetime.now(timezone.utc)
             self.logger.debug(f"Flush of {len(events)} events completed.")
@@ -189,11 +183,39 @@ class Trubrics:
         self.flush()
         self.logger.debug("Background thread stopped and final flush completed.")
 
-    def _post(self, events: list[dict]):
+    def _process_batch(self, batch: list[dict], batch_id: int):
+        events = []
+        llm_events = []
+        for event in batch:
+            if event["event_type"] == EventTypes.llm_event:
+                event.pop("event_type")
+                llm_events.append(event)
+            elif event["event_type"] == EventTypes.event:
+                event.pop("event_type")
+                events.append(event)
+
+        events_success = self._post(events, IngestionEndpoints.events.value, EventTypes.event)
+        llm_events_success = self._post(llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event)
+
+        if not events_success:
+            self.logger.warning(
+                f"Retrying flush of batch {batch_id} of {len(events)} events."
+            )
+            time.sleep(5)
+            self._post(events, IngestionEndpoints.events.value, EventTypes.event)
+
+        if not llm_events_success:
+            self.logger.warning(
+                f"Retrying flush of batch {batch_id} of {len(llm_events)} llm_events."
+            )
+            time.sleep(5)
+            self._post(llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event)
+
+    def _post(self, events: list[dict], endpoint: str, event_type: EventTypes):
         with requests.Session() as session:
             try:
                 response = session.post(
-                    f"{self.host}/publish_events",
+                    f"{self.host}/{endpoint}",
                     headers={
                         "Content-Type": "application/json",
                         "x-api-key": self.api_key,
@@ -201,7 +223,7 @@ class Trubrics:
                     json=events,
                 )
                 response.raise_for_status()
-                self.logger.info(f"{len(events)} events sent to Trubrics.")
+                self.logger.info(f"{len(events)} {event_type.value} sent to Trubrics.")
                 return True
             except requests.exceptions.HTTPError as e:
                 error_message = response.text if response.status_code != 200 else str(e)
@@ -212,12 +234,12 @@ class Trubrics:
                 except json.JSONDecodeError:
                     pass
                 self.logger.error(
-                    f"Error flushing {len(events)} events: {error_message}"
+                    f"Error flushing {len(events)} {event_type.value}: {error_message}"
                 )
                 return False
             except Exception as e:
                 self.logger.error(
-                    f"Unexpected error flushing {len(events)} events: {e}"
+                    f"Unexpected error flushing {len(events)} {event_type.value}: {e}"
                 )
                 return False
 
