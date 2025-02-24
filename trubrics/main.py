@@ -13,7 +13,7 @@ from trubrics.config import (
     MAX_FLUSH_BATCH_SIZE,
     MIN_FLUSH_INTERVAL,
 )
-from trubrics.enums import EventTypes, IngestionEndpoints 
+from trubrics.enums import EventTypes, IngestionEndpoints
 from trubrics.logger import trubrics_logger
 
 
@@ -204,9 +204,7 @@ class Trubrics:
                 f"Retrying flush of batch {batch_id} of {len(events)} events."
             )
             time.sleep(5)
-            self._post(
-                events, IngestionEndpoints.events.value, EventTypes.event
-            )
+            self._post(events, IngestionEndpoints.events.value, EventTypes.event)
 
         if not llm_events_success:
             self.logger.warning(
