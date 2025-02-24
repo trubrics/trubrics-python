@@ -13,7 +13,7 @@ from trubrics.config import (
     MAX_FLUSH_BATCH_SIZE,
     MIN_FLUSH_INTERVAL,
 )
-from trubrics.enums import IngestionEndpoints, EventTypes 
+from trubrics.enums import EventTypes, IngestionEndpoints 
 from trubrics.logger import trubrics_logger
 
 
@@ -149,9 +149,7 @@ class Trubrics:
 
         with self._lock:
             self.queue.append(llm_event_dict)
-            self.logger.debug(
-                f"LLM event by user `{user_id}` has been added to queue."
-            )
+            self.logger.debug(f"LLM event by user `{user_id}` has been added to queue.")
 
     def flush(self):
         """Flush the event queue."""
@@ -194,22 +192,30 @@ class Trubrics:
                 event.pop("event_type")
                 events.append(event)
 
-        events_success = self._post(events, IngestionEndpoints.events.value, EventTypes.event)
-        llm_events_success = self._post(llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event)
+        events_success = self._post(
+            events, IngestionEndpoints.events.value, EventTypes.event
+        )
+        llm_events_success = self._post(
+            llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event
+        )
 
         if not events_success:
             self.logger.warning(
                 f"Retrying flush of batch {batch_id} of {len(events)} events."
             )
             time.sleep(5)
-            self._post(events, IngestionEndpoints.events.value, EventTypes.event)
+            self._post(
+                events, IngestionEndpoints.events.value, EventTypes.event
+            )
 
         if not llm_events_success:
             self.logger.warning(
                 f"Retrying flush of batch {batch_id} of {len(llm_events)} llm_events."
             )
             time.sleep(5)
-            self._post(llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event)
+            self._post(
+                llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event
+            )
 
     def _post(self, events: list[dict], endpoint: str, event_type: EventTypes):
         with requests.Session() as session:

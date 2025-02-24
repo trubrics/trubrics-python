@@ -9,3 +9,4 @@ class EventTypes(Enum):
 class IngestionEndpoints(Enum):
     events = "publish_events"
     llm_events = "publish_llm_events"
+    
