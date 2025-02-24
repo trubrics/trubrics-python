@@ -192,30 +192,40 @@ class Trubrics:
                 event.pop("event_type")
                 events.append(event)
 
-        events_success = self._post(
-            events, IngestionEndpoints.events.value, EventTypes.event
-        )
+        events_success = self._post(events, IngestionEndpoints.events, EventTypes.event)
         llm_events_success = self._post(
-            llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event
+            llm_events, IngestionEndpoints.llm_events, EventTypes.llm_event
         )
 
         if not events_success:
-            self.logger.warning(
-                f"Retrying flush of batch {batch_id} of {len(events)} events."
+            self._retry_post(
+                events, IngestionEndpoints.events, EventTypes.event, batch_id
             )
-            time.sleep(5)
-            self._post(events, IngestionEndpoints.events.value, EventTypes.event)
 
         if not llm_events_success:
-            self.logger.warning(
-                f"Retrying flush of batch {batch_id} of {len(llm_events)} llm_events."
-            )
-            time.sleep(5)
-            self._post(
-                llm_events, IngestionEndpoints.llm_events.value, EventTypes.llm_event
+            self._retry_post(
+                llm_events,
+                IngestionEndpoints.llm_events,
+                EventTypes.llm_event,
+                batch_id,
             )
 
-    def _post(self, events: list[dict], endpoint: str, event_type: EventTypes):
+    def _retry_post(
+        self,
+        events: list[dict],
+        endpoint: IngestionEndpoints,
+        event_type: EventTypes,
+        batch_id: int,
+    ):
+        self.logger.warning(
+            f"Retrying flush of {len(events)} {event_type.value}s in batch {batch_id}"
+        )
+        time.sleep(5)
+        self._post(events, endpoint, event_type)
+
+    def _post(
+        self, events: list[dict], endpoint: IngestionEndpoints, event_type: EventTypes
+    ):
         with requests.Session() as session:
             try:
                 response = session.post(
@@ -227,7 +237,7 @@ class Trubrics:
                     json=events,
                 )
                 response.raise_for_status()
-                self.logger.info(f"{len(events)} {event_type.value} sent to Trubrics.")
+                self.logger.info(f"{len(events)} {event_type.value}s sent to Trubrics.")
                 return True
             except requests.exceptions.HTTPError as e:
                 error_message = response.text if response.status_code != 200 else str(e)
@@ -238,12 +248,12 @@ class Trubrics:
                 except json.JSONDecodeError:
                     pass
                 self.logger.error(
-                    f"Error flushing {len(events)} {event_type.value}: {error_message}"
+                    f"Error flushing {len(events)} {event_type.value}s: {error_message}"
                 )
                 return False
             except Exception as e:
                 self.logger.error(
-                    f"Unexpected error flushing {len(events)} {event_type.value}: {e}"
+                    f"Unexpected error flushing {len(events)} {event_type.value}s: {e}"
                 )
                 return False
 
