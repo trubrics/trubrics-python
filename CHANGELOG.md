@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.8.3] - 2025-02-26
 ### Changed
 - Change logging level to debug for flushing events and adding event to queue
 
@@ -17,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added missing flushing limit values, and setup automated flush if limit is reached
 ### Changed
 - Change LLM tracking latency to seconds and remove default latency from event properties
-
 
 ## [1.8.1] - 2025-02-07
 ### Fixed
