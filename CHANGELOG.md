@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- thread_id to track_llm_events
+
+### Changed
+- assistant_id now optional in track_llm_events
+
 ## [1.8.3] - 2025-02-26
 ### Changed
 - Change logging level to debug for flushing events and adding event to queue

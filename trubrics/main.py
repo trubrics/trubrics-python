@@ -114,22 +114,24 @@ class Trubrics:
         self,
         user_id: str,
         prompt: str,
-        assistant_id: str,
         generation: str,
+        assistant_id: str | None = None,
         properties: dict | None = None,
         timestamp: datetime | None = None,
         latency: float | None = None,
+        thread_id: str | None = None,
     ):
         """
         Track an LLM prompt and generation.
         Args:
             user_id (str): The ID of the user.
             prompt (str): The prompt given to the LLM.
-            assistant_id (str): The ID of the assistant.
             generation (str): The generated response from the LLM.
+            assistant_id (str | None): The ID of the assistant.
             properties (dict | None): Additional properties to track.
             timestamp (datetime | None): The timestamp of the generation event. If None, the current time in UTC is used.
             latency (float | None): The latency in seconds between the prompt and the generation. Defaults to 1.
+            thread_id (str | None): The ID of the thread, used to link messages in a conversation.
         """
 
         llm_event_dict = {
@@ -145,6 +147,7 @@ class Trubrics:
             ),
             "latency": latency,
             "event_type": EventTypes.llm_event,
+            "thread_id": str(thread_id) if thread_id else None,
         }
 
         with self._lock:
