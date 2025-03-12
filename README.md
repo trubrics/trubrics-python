@@ -40,10 +40,10 @@ client.track_llm(
     assistant_id="gpt-4",
     generation="The capital of France is Paris.",
     properties={
-        "$thread_id": "your-thread-id",  # special trubrics property to group an interaction by conversation thread
-        "model": "gpt-4"
+        "support_tier": "entreprise",
     },
-    latency=1.5  # seconds
+    latency=1.5,  # seconds
+    thread_id="user123_thread_id"
 )
 ```
 
