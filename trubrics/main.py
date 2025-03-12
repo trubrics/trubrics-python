@@ -147,7 +147,7 @@ class Trubrics:
             ),
             "latency": latency,
             "event_type": EventTypes.llm_event,
-            "thread_id": str(thread_id),
+            "thread_id": str(thread_id) if thread_id else None,
         }
 
         with self._lock:
