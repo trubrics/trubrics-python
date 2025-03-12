@@ -114,8 +114,8 @@ class Trubrics:
         self,
         user_id: str,
         prompt: str,
-        assistant_id: str,
         generation: str,
+        assistant_id: str | None = None,
         properties: dict | None = None,
         timestamp: datetime | None = None,
         latency: float | None = None,
@@ -126,8 +126,8 @@ class Trubrics:
         Args:
             user_id (str): The ID of the user.
             prompt (str): The prompt given to the LLM.
-            assistant_id (str): The ID of the assistant.
             generation (str): The generated response from the LLM.
+            assistant_id (str | None): The ID of the assistant.
             properties (dict | None): Additional properties to track.
             timestamp (datetime | None): The timestamp of the generation event. If None, the current time in UTC is used.
             latency (float | None): The latency in seconds between the prompt and the generation. Defaults to 1.
