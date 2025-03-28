@@ -115,6 +115,8 @@ class Trubrics:
         user_id: str,
         prompt: str,
         generation: str,
+        prompt_event_name: str = "Prompt",
+        generation_event_name: str = "Generation",
         assistant_id: str | None = None,
         properties: dict | None = None,
         timestamp: datetime | None = None,
@@ -127,6 +129,8 @@ class Trubrics:
             user_id (str): The ID of the user.
             prompt (str): The prompt given to the LLM.
             generation (str): The generated response from the LLM.
+            prompt_event_name (str): The name given to the prompt event in Trubrics.
+            generation_event_name (str): The name given to the generation event in Trubrics.
             assistant_id (str | None): The ID of the assistant.
             properties (dict | None): Additional properties to track.
             timestamp (datetime | None): The timestamp of the generation event. If None, the current time in UTC is used.
@@ -138,6 +142,8 @@ class Trubrics:
             "user_id": user_id,
             "prompt": prompt,
             "generation": generation,
+            "prompt_event_name": prompt_event_name,
+            "generation_event_name": generation_event_name,
             "assistant_id": assistant_id,
             "properties": properties,
             "timestamp": (
