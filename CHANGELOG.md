@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.5] - 2025-03-28
+### Added
+- prompt_event_name and generation_event_name to track_llm_events
+
 ## [1.8.4] - 2025-03-17
 ### Added
 - thread_id to track_llm_events
