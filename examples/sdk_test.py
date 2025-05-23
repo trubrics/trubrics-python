@@ -14,4 +14,12 @@ trubrics.track(
     },
 )
 
+trubrics.track_llm(
+    user_id="sdk_test",
+    prompt="What is Trubrics?",
+    assistant_id="gpt4o",
+    generation="Trubrics is a product analytics platform for AI applications.",
+    latency=2,
+)
+
 trubrics.close()
