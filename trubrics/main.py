@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 from datetime import datetime, timezone
+from importlib.metadata import version
 
 import requests
 
@@ -93,6 +94,8 @@ class Trubrics:
             timestamp (datetime | None): The timestamp of event. If None, the current time in UTC is used. If not a datetime object, the event is ignored.
         """
 
+        properties = self._add_source_property(properties)
+
         event_dict = {
             "user_id": user_id,
             "event": event,
@@ -137,6 +140,8 @@ class Trubrics:
             latency (float | None): The latency in seconds between the prompt and the generation. Defaults to 1.
             thread_id (str | None): The ID of the thread, used to link messages in a conversation.
         """
+
+        properties = self._add_source_property(properties)
 
         llm_event_dict = {
             "user_id": user_id,
@@ -279,3 +284,10 @@ class Trubrics:
             ):
                 self.logger.debug(f"Time since last flush: {time_since_last_flush}")
                 self.flush()
+
+    @staticmethod
+    def _add_source_property(properties: dict | None = None):
+        if properties is None:
+            properties = {}
+        properties["source"] = f"python_sdk_{version('trubrics')}"
+        return properties
